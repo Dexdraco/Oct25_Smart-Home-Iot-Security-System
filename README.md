@@ -25,13 +25,8 @@ Prof. Dr. Shahrulniza Bin Musa
 
 ---
 
-- **Course Code:** IIB20804  
 - **Submission Title:** Smart Home IoT Security System with Motion Detection and Alerts  
-- **Student ID(s) & Signature(s):**  
-  - (52215124369)  
-  - (52215124525)  
-  - (52215124227)  
-  - (52215124313)  
+
 
 ---
 

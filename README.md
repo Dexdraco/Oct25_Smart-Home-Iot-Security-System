@@ -25,10 +25,6 @@ Prof. Dr. Shahrulniza Bin Musa
 
 ---
 
-### Student Receipt of Submission
-This is your submission receipt, the only accepted evidence that you have submitted your work. After this is stamped by the appointed staff & filled in, cut along the dotted lines above & retain this for your record.
-
-- **Date & Time of Submission (stamp):**  
 - **Course Code:** IIB20804  
 - **Submission Title:** Smart Home IoT Security System with Motion Detection and Alerts  
 - **Student ID(s) & Signature(s):**  

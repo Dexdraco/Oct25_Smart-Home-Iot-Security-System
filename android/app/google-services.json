@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443123468620",
+    "project_id": "iot-smart-home-motion-d8048",
+    "storage_bucket": "iot-smart-home-motion-d8048.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443123468620:android:506a015f83f1feb95f67e9",
+        "android_client_info": {
+          "package_name": "com.example.iot_security_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPQeCFLeKWBDYsbnPK_LVx-nCoazbYW5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

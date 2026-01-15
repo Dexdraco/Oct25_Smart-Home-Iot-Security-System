@@ -1,0 +1,116 @@
+#include <Arduino.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+// --- WiFi Credentials ---
+#define WIFI_SSID " iPhone"
+#define WIFI_PASSWORD "123456789"
+
+// --- oneM2M / Mobius Configuration ---
+// Use the IP address shown in your Mobius terminal
+#define MOBIUS_IP "172.20.10.3" 
+#define MOBIUS_PORT "7579"
+#define CSE_NAME "Mobius"
+#define AE_NAME "ESP32_AE"
+#define CONTAINER_NAME "motion_alerts"
+
+// --- Hardware Pins ---
+#define PIR_PIN 12 
+#define BUZZER_PIN 14 
+
+void setup() {
+  Serial.begin(115200);
+  
+  pinMode(PIR_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // Connect to WiFi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi Connected!");
+
+  // Step 1: Register the ESP32 as an Application Entity (AE) in Mobius
+  registerAE();
+  
+  // Step 2: Create the Container for motion data
+  createContainer();
+}
+
+void registerAE() {
+  HTTPClient http;
+  String url = "http://" + String(MOBIUS_IP) + ":" + String(MOBIUS_PORT) + "/" + String(CSE_NAME);
+  
+  http.begin(url);
+  http.addHeader("X-M2M-Origin", "S" + String(AE_NAME)); // Origin ID
+  http.addHeader("X-M2M-RI", "req_ae_reg");            // Request ID
+  http.addHeader("Content-Type", "application/json;ty=2"); // ty=2 is AE
+
+  String body = "{\"m2m:ae\":{\"rn\":\"" + String(AE_NAME) + "\",\"api\":\"app.sec.01\",\"rr\":true,\"srv\":[\"4\"]}}";
+  
+  int httpResponseCode = http.POST(body);
+  Serial.print("AE Registration Status: ");
+  Serial.println(httpResponseCode); // 201 means success, 409 means already exists
+  http.end();
+}
+
+void createContainer() {
+  HTTPClient http;
+  String url = "http://" + String(MOBIUS_IP) + ":" + String(MOBIUS_PORT) + "/" + String(CSE_NAME) + "/" + String(AE_NAME);
+  
+  http.begin(url);
+  http.addHeader("X-M2M-Origin", "S" + String(AE_NAME));
+  http.addHeader("X-M2M-RI", "req_cnt_create");
+  http.addHeader("Content-Type", "application/json;ty=3"); // ty=3 is Container
+
+  String body = "{\"m2m:cnt\":{\"rn\":\"" + String(CONTAINER_NAME) + "\",\"mni\":100}}";
+  
+  int httpResponseCode = http.POST(body);
+  Serial.print("Container Creation Status: ");
+  Serial.println(httpResponseCode);
+  http.end();
+}
+
+void sendMotionToOneM2M() {
+  HTTPClient http;
+  // Ensure the URL matches your laptop IP and resource path
+  String url = "http://" + String(MOBIUS_IP) + ":" + String(MOBIUS_PORT) + "/Mobius/ESP32_AE/motion_alerts";
+  
+  http.begin(url);
+  http.addHeader("X-M2M-Origin", "SESP32_AE");
+  http.addHeader("X-M2M-RI", String(random(10000, 99999))); // Unique Request ID
+  http.addHeader("Content-Type", "application/json;ty=4"); // ty=4 is ContentInstance
+
+  // We must use \" for the quotes inside the 'con' string
+  String content = "{\\\"device\\\":\\\"ESP32_DEV_01\\\",\\\"location\\\":\\\"Front Door\\\",\\\"motion\\\":true}";
+  String body = "{\"m2m:cin\":{\"con\":\"" + content + "\"}}";
+  
+  int httpResponseCode = http.POST(body);
+  
+  if(httpResponseCode == 201) {
+    Serial.println("Success: Motion alert saved to Mobius!");
+  } else {
+    Serial.print("Mobius Error: ");
+    Serial.println(httpResponseCode);
+    // If still getting 400, check the Mobius terminal to see the raw body received
+  }
+  http.end();
+}
+
+void loop() {
+  if (digitalRead(PIR_PIN) == HIGH) {
+    Serial.println("Motion! Buzzer ACTIVE & Syncing to Mobius...");
+
+    digitalWrite(BUZZER_PIN, HIGH); 
+
+    // Send data to Mobius instead of Firestore directly
+    sendMotionToOneM2M();
+    
+    delay(2000); 
+    digitalWrite(BUZZER_PIN, LOW); 
+    
+    delay(1000); // Cooldown
+  }
+}
